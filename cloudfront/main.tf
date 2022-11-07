@@ -45,7 +45,7 @@ locals {
   }
 
   tags = merge(
-    { "terraform-repo" = "terraform-module-cloudfront" },
+    { "Terraform_source_repo" = "terraform-module-cloudfront" },
     var.tags
   )
 
