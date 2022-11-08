@@ -177,15 +177,18 @@ resource "aws_cloudfront_distribution" "standard" {
   dynamic "logging_config" {
     for_each = can( var.args.logging_config ) ? var.args.logging_config : local.defaults.logging_config
     content {
-      bucket = logging_config.value.bucket
+      bucket = try(
+        logging_config.value.bucket,
+        local.defaults.logging_config[0].bucket
+      )
       include_cookies = try(
         logging_config.value.include_cookies,
-        local.defaults.logging_config.include_cookies,
+        local.defaults.logging_config[0].include_cookies,
         false
       )
       prefix = try(
         logging_config.value.prefix,
-        local.defaults.logging_config.prefix,
+        local.defaults.logging_config[0].prefix,
         null
       )
     }
