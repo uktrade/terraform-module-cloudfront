@@ -81,7 +81,7 @@ your Terraform state and will henceforth be managed by Terraform.
 10.  Optional: you may also want to re-run the `aws cloudfront get-distribution...` command - to compare before / after configuration is as expected.
 
 ## Example of Parameter Hierarchy and Precedence
-The table below illustrates how arguments at the 3 levels are applied.  
+The table below illustrates how arguments at the 3 levels are applied (note: this table looks much clearer in a Markdown previewer - alignment, colours, etc.).  
 - Here, arguments such as `default_cache_behavior.allowed_methods` have been set at the Environment level (2) - to override the Organisation level (1) - but then do not need setting for each Distribution (3).
 - Whereas arguments such as `cached_methods` can be ignored at levels 2 and 3, if the Organisation level (1) is appropriate.  
 - Only arguments that are applicable to this specific distribution (e.g. Origin, Alias and Certificate here) are set at the Distribution level.
