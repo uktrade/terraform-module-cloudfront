@@ -42,6 +42,7 @@ locals {
       }
     }
     logging_config = try ( var.defaults.logging_config, [] ) # Sub-map defaults set in-line
+    origin_group = try ( var.defaults.origin_group, [] ) # Sub-map defaults set in-line
   }
 
   tags = merge(
@@ -191,6 +192,26 @@ resource "aws_cloudfront_distribution" "standard" {
         local.defaults.logging_config[0].prefix,
         null
       )
+    }
+  }
+
+  dynamic "origin_group" {
+    for_each = can( var.args.origin_group ) ? var.args.origin_group : local.defaults.origin_group
+    content {
+      origin_id = origin_group.value.origin_id
+      failover_criteria {
+        status_codes = try(
+          origin_group.value.failover_criteria.status_codes,
+          local.defaults.origin_group[0].failover_criteria.status_codes,
+          [500]
+        )
+      }
+      dynamic "member" {
+        for_each = origin_group.value.member
+        content {
+          origin_id = member.value.origin_id
+        }
+      }
     }
   }
 
