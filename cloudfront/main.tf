@@ -5,6 +5,7 @@ locals {
     is_ipv6_enabled = try( var.defaults.is_ipv6_enabled, true )
     aliases = try( var.defaults.aliases, null )
     web_acl_id = try( var.defaults.web_acl_id, null )
+    price_class = try( var.defaults.price_class, "PriceClass_All" )
     origin = {
       connection_attempts = try( var.defaults.origin.connection_attempts, null )
       connection_timeout = try( var.defaults.origin.connection_timeout, null )
@@ -59,6 +60,7 @@ resource "aws_cloudfront_distribution" "standard" {
   is_ipv6_enabled = try( var.args.is_ipv6_enabled, local.defaults.is_ipv6_enabled )
   aliases = try( var.args.aliases, local.defaults.aliases )
   web_acl_id = try( var.args.web_acl_id, local.defaults.web_acl_id )
+  price_class = try( var.args.price_class, local.defaults.price_class )
 
   dynamic "origin" { # There must be at least one origin.
     for_each = var.args.origin
