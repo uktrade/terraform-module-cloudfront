@@ -80,6 +80,38 @@ your Terraform state and will henceforth be managed by Terraform.
 9.  Then run `terraform apply` to apply any updates / refresh the Terraform state with the new distribution.
 10.  Optional: you may also want to re-run the `aws cloudfront get-distribution...` command - to compare before / after configuration is as expected.
 
+## Creating and Validating a TLS certificate with ACM
+You can optionally use this module to create and validate a certificate in ACM. The default validation option is DNS.  
+Use the following configuration to create, validate and use a certificate with this module:
+```terraform
+module "example" {
+  source = "github.com/uktrade/terraform-module-cloudfront/cloudfront"
+  args = {
+    ...
+    acm_certificate = {
+      domain_name = the-domain-name-for-the-certificate
+      dns_validation_route53_zone: the-route-53-zone-to-create-the-validation-record
+    }
+  }
+}
+```
+Other parameters can also be provided but `domain_name` is mandatory, and also `dns_validation_route53_zone` when using DNS validation.  
+
+Alternatively, use this configration to specify the ARN of an existing validated certificate:
+```terraform
+module "example" {
+  source = "github.com/uktrade/terraform-module-cloudfront/cloudfront"
+  args = {
+    ...
+    viewer_certificate = {
+      acm_certificate_arn = arn-of-an-existing-validated-certificate
+    }
+  }
+}
+```
+
+Note that a certificate created via this module (first option above) **will be used** by the CloudFront distribution. It's not possible to create a certificate but use a different one (i.e. cannot use both `acm_certificate` and `viewer_certificate.acm_certificate_arn` together to create one certificate but use a different one).
+
 ## Example of Parameter Hierarchy and Precedence
 The table below illustrates how arguments at the 3 levels are applied (note: this table looks much clearer in a Markdown previewer - alignment, colours, etc.).  
 - Here, arguments such as `default_cache_behavior.allowed_methods` have been set at the Environment level (2) - to override the Organisation level (1) - but then do not need setting for each Distribution (3).
