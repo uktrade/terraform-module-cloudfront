@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      configuration_aliases = [ aws.default, aws.us-east-1 ]
+    }
+  }
+}
+
 locals {
 
   defaults = {
@@ -55,6 +64,7 @@ locals {
 
 
 resource "aws_cloudfront_distribution" "standard" {
+  provider = aws.default
 
   enabled = try( var.args.enabled, local.defaults.enabled )
   is_ipv6_enabled = try( var.args.is_ipv6_enabled, local.defaults.is_ipv6_enabled )
