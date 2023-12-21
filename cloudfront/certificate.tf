@@ -3,7 +3,7 @@ resource "aws_acm_certificate" "cert" {
 
   count = can( var.args.acm_certificate.domain_name ) ? 1 : 0
   domain_name = var.args.acm_certificate.domain_name
-  subject_alternative_names = try( var.args.acm_certificate.subject_alternative_name, [] )
+  subject_alternative_names = try( var.args.acm_certificate.subject_alternative_names, [] )
   validation_method = try( var.args.acm_certificate.validation_method, "DNS" )
   key_algorithm = try( var.args.acm_certificate.key_algorithm, "RSA_2048" )
   tags = local.tags
