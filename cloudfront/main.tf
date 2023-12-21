@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      configuration_aliases = [ aws.default, aws.us-east-1 ]
+    }
+  }
+}
+
 locals {
 
   defaults = {
@@ -55,6 +64,7 @@ locals {
 
 
 resource "aws_cloudfront_distribution" "standard" {
+  provider = aws.default
 
   enabled = try( var.args.enabled, local.defaults.enabled )
   is_ipv6_enabled = try( var.args.is_ipv6_enabled, local.defaults.is_ipv6_enabled )
@@ -161,10 +171,16 @@ resource "aws_cloudfront_distribution" "standard" {
   
   viewer_certificate {
     cloudfront_default_certificate = try(
-      var.args.viewer_certificate.cloudfront_default_certificate, # Can specify the default cert here...
-      can( var.args.viewer_certificate.acm_certificate_arn ) ? false : true # ...otherwise set to false if an arn is provided, true otherwise.
+      var.args.viewer_certificate.cloudfront_default_certificate, # Can specify to use the default cert here...
+      can( 
+        try( aws_acm_certificate.cert[0].arn, var.args.viewer_certificate.acm_certificate_arn )
+      ) ? false : true # ...otherwise set to false if a cert was created in this module on arn is specified, true otherwise.
     )
-    acm_certificate_arn = try( var.args.viewer_certificate.acm_certificate_arn, local.defaults.viewer_certificate.acm_certificate_arn )
+    acm_certificate_arn = try(
+      aws_acm_certificate.cert[0].arn, # Use certificate if one was created in this module.
+      var.args.viewer_certificate.acm_certificate_arn, # Or use an explicit ARN, if it's been defined.
+      local.defaults.viewer_certificate.acm_certificate_arn # Otherwise use the certificate from local.default
+    )
     iam_certificate_id = try( var.args.viewer_certificate.iam_certificate_id, local.defaults.viewer_certificate.iam_certificate_id )
     minimum_protocol_version = try( var.args.viewer_certificate.minimum_protocol_version, local.defaults.viewer_certificate.minimum_protocol_version )
     ssl_support_method = try( var.args.viewer_certificate.ssl_support_method, local.defaults.viewer_certificate.ssl_support_method )
