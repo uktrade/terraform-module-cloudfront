@@ -53,6 +53,7 @@ locals {
     }
     logging_config = try ( var.defaults.logging_config, [] ) # Sub-map defaults set in-line
     origin_group = try ( var.defaults.origin_group, [] ) # Sub-map defaults set in-line
+    custom_error_response = try ( var.defaults.custom_error_response, [] ) # error_code default set in-line
   }
 
   tags = merge(
@@ -230,6 +231,16 @@ resource "aws_cloudfront_distribution" "standard" {
           origin_id = member.value.origin_id
         }
       }
+    }
+  }
+
+  dynamic "custom_error_response" {
+    for_each = can( var.args.custom_error_response ) ? var.args.custom_error_response : local.defaults.custom_error_response
+    content {
+      error_code = try( custom_error_response.value.error_code, 500 )
+      error_caching_min_ttl = try( custom_error_response.value.error_caching_min_ttl, null )
+      response_code = try( custom_error_response.value.response_code, null )
+      response_page_path = try( custom_error_response.value.response_page_path, null )
     }
   }
 
