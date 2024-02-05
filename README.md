@@ -1,4 +1,4 @@
-# CloudFront Terraform Module
+# CloudFront Terraform Module (with S3 Redirect option)
 
 This Terraform module provides a standard CloudFront configuration. The approach here allows three levels of configuration (each subsequent level taking precedence) as follows:
 1. "Organisation" level :- these are set in the module here (in the `locals { defaults = {...` block) and apply to all distributions.
@@ -111,6 +111,38 @@ module "example" {
 ```
 
 Note that a certificate created via this module (first option above) **will be used** by the CloudFront distribution. It's not possible to create a certificate but use a different one (i.e. cannot use both `acm_certificate` and `viewer_certificate.acm_certificate_arn` together to create one certificate but use a different one).
+
+## Using the CloudFront module with S3 for redirects
+Also here is an "S3 Redirect" module which can be used along with the CloudFront module for page redirection.   
+
+First create the S3 bucket with static website hosting and redirection:
+```terraform
+module "s3_redirect_example" {
+  source = "github.com/uktrade/terraform-module-cloudfront/s3-redirect"
+  args = {
+    bucket = "example-redirect-bucket"
+    redirect_all_requests_to = [{ host_name =  "www.example.com" }]
+  }
+}
+```
+Not many args are required here... only the bucket name and the site to redirect to. You can override other parameters such as the public access permissions, etc. but there is usually no need.  
+Note you can also use `routing_rule` or `routing_rules` instead of `redirect_all_requests_to`. The Terraform documentation [here](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) is useful for arg reference.
+
+Then set up CloudFront, such as:
+```terraform
+module "redirect_example"" {
+  source = "github.com/uktrade/terraform-module-cloudfront/cloudfront"
+  args = {
+    aliases = ["example-alias"]
+    origin = [{
+      domain_name = module.s3_redirect_example.aws_s3_bucket_website_configuration.website_endpoint
+    }]
+  }
+}
+```
+Be sure to set the `origin.domain_name` arg to be the `aws_s3_bucket_website_configuration.website_endpoint` variable which is output from the S3 Redirect module.
+AWS S3 documentation describing the parameters can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-page-redirect.html).  
+This can be used together with an `acm_certificate` block (previous example) for HTTPS redirection (see this [re:Post article](https://repost.aws/knowledge-center/cloudfront-https-requests-s3) for further info on serving HTTPS requests).
 
 ## Example of Parameter Hierarchy and Precedence
 The table below illustrates how arguments at the 3 levels are applied (note: this table looks much clearer in a Markdown previewer - alignment, colours, etc.).  
