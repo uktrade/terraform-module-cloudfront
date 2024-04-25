@@ -174,11 +174,11 @@ resource "aws_cloudfront_distribution" "standard" {
     cloudfront_default_certificate = try(
       var.args.viewer_certificate.cloudfront_default_certificate, # Can specify to use the default cert here...
       can( 
-        try( aws_acm_certificate.cert[0].arn, var.args.viewer_certificate.acm_certificate_arn )
+        try( module.cloudfront_certificate[0].aws_acm_certificate.arn, var.args.viewer_certificate.acm_certificate_arn )
       ) ? false : true # ...otherwise set to false if a cert was created in this module on arn is specified, true otherwise.
     )
     acm_certificate_arn = try(
-      aws_acm_certificate.cert[0].arn, # Use certificate if one was created in this module.
+      module.cloudfront_certificate[0].aws_acm_certificate.arn, # Use certificate if one was created via this module.
       var.args.viewer_certificate.acm_certificate_arn, # Or use an explicit ARN, if it's been defined.
       local.defaults.viewer_certificate.acm_certificate_arn # Otherwise use the certificate from local.default
     )

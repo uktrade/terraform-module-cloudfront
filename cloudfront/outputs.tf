@@ -3,5 +3,5 @@ output "aws_cloudfront_distribution" {
 }
 
 output "aws_acm_certificate" {
-  value = try( aws_acm_certificate.cert[0], null )
+  value = try( module.cloudfront_certificate.aws_acm_certificate.cert, null )
 }
