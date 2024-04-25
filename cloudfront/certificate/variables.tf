@@ -4,12 +4,6 @@ variable "args" {
   type        = any
 }
 
-# variable "defaults" {
-#   default     = null
-#   description = "A default map of arguments to apply to the CloudFront distribution. Takes precedence over module defaults."
-#   type        = any
-# }
-
 variable "tags" {
   default     = {}
   description = "A map of tags to assign to the CloudFront distribution."
