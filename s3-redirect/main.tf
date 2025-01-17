@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "redirect" {
 
 resource "aws_s3_bucket_website_configuration" "redirect" {
   provider = aws.default
-  count = can( try(var.args.redirect_all_requests_to, var.args.routing_rule, var.args.routing_rules) ) ? 1 : 0
+  count = can( try(var.args.redirect_all_requests_to, var.args.routing_rule, var.args.routing_rules, var.args.cloudfront_origin) ) ? 1 : 0
   bucket = aws_s3_bucket.redirect.id
 
   dynamic "redirect_all_requests_to" {
@@ -112,11 +112,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "redirect_apply_ss
 
 resource "aws_s3_bucket_policy" "redirect_deny_non_https_access" {
   provider = aws.default
+  count = can(try(var.args.cloudfront_origin)) ? 0 : 1
   bucket = aws_s3_bucket.redirect.id
   policy = data.aws_iam_policy_document.redirect_deny_non_https_access.json
 }
 
 data "aws_iam_policy_document" "redirect_deny_non_https_access" {
+  depends_on = [ aws_s3_bucket_public_access_block.redirect ]
    statement {
     sid = "Deny non-HTTPS access"
     actions = ["s3:*"]
@@ -130,6 +132,29 @@ data "aws_iam_policy_document" "redirect_deny_non_https_access" {
       test = "Bool"
       variable = "aws:SecureTransport"
       values = ["false"]
+    }
+  }
+}
+
+# When CloudFront is configured to use an S3 bucket as its origin, it defaults to HTTP and can't be changed.
+# Instead, we'll want a policy to allow read only access. 
+resource "aws_s3_bucket_policy" "redirect_allow_cloudfront_origin" {
+  provider = aws.default
+  count = can(try(var.args.cloudfront_origin)) ? 1 : 0
+  bucket = aws_s3_bucket.redirect.id
+  policy = data.aws_iam_policy_document.redirect_allow_cloudfront_origin.json
+}
+
+data "aws_iam_policy_document" "redirect_allow_cloudfront_origin" {
+  depends_on = [ aws_s3_bucket_public_access_block.redirect ]
+   statement {
+    sid = "Allow CloudFront Origin Read Access"
+    actions = ["s3:GetObject"]
+    effect = "Allow"
+    resources = ["${aws_s3_bucket.redirect.arn}/*"]
+    principals {
+      type = "*"
+      identifiers = ["*"]
     }
   }
 }
