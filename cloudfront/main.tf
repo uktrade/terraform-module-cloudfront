@@ -40,6 +40,7 @@ locals {
       default_ttl               = try(var.defaults.default_cache_behavior.default_ttl, 86400)
       max_ttl                   = try(var.defaults.default_cache_behavior.max_ttl, 31536000)
       cache_policy_id           = try(var.defaults.default_cache_behavior.cache_policy_id, null)
+      origin_request_policy_id  = try(var.defaults.default_cache_behavior.origin_request_policy_id, null)
       field_level_encryption_id = try(var.defaults.default_cache_behavior.field_level_encryption_id, null)
       forwarded_values = {
         enabled                 = try(var.defaults.default_cache_behavior.forwarded_values.enabled, true)
@@ -138,6 +139,7 @@ resource "aws_cloudfront_distribution" "standard" {
     allowed_methods           = try(var.args.default_cache_behavior.allowed_methods, local.defaults.default_cache_behavior.allowed_methods)
     cached_methods            = try(var.args.default_cache_behavior.cached_methods, local.defaults.default_cache_behavior.cached_methods)
     cache_policy_id           = try(var.args.default_cache_behavior.cache_policy_id, local.defaults.default_cache_behavior.cache_policy_id)
+    origin_request_policy_id  = try(var.args.default_cache_behavior.origin_request_policy_id, local.defaults.default_cache_behavior.origin_request_policy_id)
     compress                  = try(var.args.default_cache_behavior.compress, local.defaults.default_cache_behavior.compress)
     default_ttl               = try(var.args.default_cache_behavior.default_ttl, local.defaults.default_cache_behavior.default_ttl)
     field_level_encryption_id = try(var.args.default_cache_behavior.field_level_encryption_id, local.defaults.default_cache_behavior.field_level_encryption_id)
